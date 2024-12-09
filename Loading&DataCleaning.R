@@ -1,13 +1,14 @@
 ##### Loading packages #####
 
 library(tidyverse)
-#library(picante)
+library(picante) # for faith's phylogenetic distance
 library(plotrix)
 library(phyloseq)
 library(cowplot)
 library(nlme)
 library(multcomp)
-#library(emmeans)
+library(dada2)
+library(emmeans) #for t-tests for MPD
 #library(FUNGuildR)
 #devtools::install_github("brendanf/FUNGuildR")
 
@@ -16,10 +17,11 @@ library(multcomp)
 #install.packages("remotes")
 #remotes::install_github("jfq3/QsRutils") #distance matrix subsetting function
 
-#library(QsRutils)
+library(QsRutils)
 #library(remotes)
 #library(ape)
-#library(phytools)
+library(phytools) #to read the tree in
+library(viridis)#for colorblind friendly colors
 
 
 save.image("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/FiguresStats/LAmarshCulture2/workspace.Rdata")  # 
@@ -29,19 +31,19 @@ load("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/Figu
 
 ##### Reading in data #####
 
-##### T-BAS data, 97% similarity ####
+##### T-BAS data, 97% similarity, there are 56 OTUs OTU0-OTU55 ####
 
 #OTUold is the otu name that was input for the isolate name in T-BAS, every isolate has a unique OTUold. The numbers of OTUold are from Nelle's original T-BAS run and then we added A, B C, etc to them to make them unique.
 #Query.sequence is also unique to each isolate. it is the OTUold plus the species name that Nelle's original T-BAS run came up with
 #OTU is the new analysis OTU - what I want
-#I think I want "Genusspecies" as for the taxonomy. "taxon assignment" is similar to genusspecies but sometimes has multiple taxa listed
-#anything with CERVNAZT is from the input data (so from Nelle's data), not what I want
+#Before I considered "GenusSpecies" for the taxonomy [this used to be called "Genusspecies" with no capital S], but now many of the entries are blank. "taxon assignment" is similar to genusspecies but sometimes has multiple taxa listed. I will still include it now so that my dataframes are the same size
+#any genus/species info with WG5WGW7J is from the input data (so from Nelle's data), not what I want
 
 OTUreport<-read.csv("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/FiguresStats/FarrerTBAScleaned5/tbas21_archiveWG5WGW7J_/assignments_report_addvoucherWG5WGW7J.csv",stringsAsFactors = T)
 cbind(OTUreport$otu,OTUreport$Query.sequence)
 OTUreport2<-OTUreport%>%
-  dplyr::select(Query.sequence,Phylum,Taxon.assignment,Genusspecies,otu,OTU_CERVNAZT:Juncus_roemerianus_CERVNAZT,Trophic.Mode,Guild)%>%
-  rename(OTUold=OTU_CERVNAZT,HostPlant=HostPlant_CERVNAZT,Site=Site_CERVNAZT,TurtleCove=TurtleCove_CERVNAZT,LUMCON=LUMCON_CERVNAZT,CERF=CERF_CERVNAZT,Spartina_patens=Spartina_patens_CERVNAZT,Spartina_alterniflora=Spartina_alterniflora_CERVNAZT,Phragmites_australis=Phragmites_australis_CERVNAZT,Sagittaria_lancifolia=Sagittaria_lancifolia_CERVNAZT,Juncus_roemerianus=Juncus_roemerianus_CERVNAZT,OTU=otu)%>%  mutate(Site = factor(Site, levels = c("Turtle Cove", "CERF", "LUMCON")))
+  dplyr::select(Query.sequence,Phylum,Taxon.assignment,GenusSpecies,otu,OTU_WG5WGW7J:Juncus_roemerianus_WG5WGW7J,Trophic.Mode,Guild)%>%
+  rename(OTUold=OTU_WG5WGW7J,HostPlant=HostPlant_WG5WGW7J,Site=Site_WG5WGW7J,TurtleCove=TurtleCove_WG5WGW7J,LUMCON=LUMCON_WG5WGW7J,CERF=CERF_WG5WGW7J,Spartina_patens=Spartina_patens_WG5WGW7J,Spartina_alterniflora=Spartina_alterniflora_WG5WGW7J,Phragmites_australis=Phragmites_australis_WG5WGW7J,Sagittaria_lancifolia=Sagittaria_lancifolia_WG5WGW7J,Juncus_roemerianus=Juncus_roemerianus_WG5WGW7J,OTU=otu)%>%  mutate(Site = factor(Site, levels = c("Turtle Cove", "CERF", "LUMCON")))
 
 head(OTUreport2)
 
@@ -68,7 +70,7 @@ dim(dat)
 
 #Collapse identical OTUs into one row. Looking at abundances of OTUs in the whole dataset. there are many many 1's (singletons). also this is needed to create the community dataset below
 dat2<-dat%>%
-  group_by(HostPlant,Site,Year,PlantIndividual,OTU,Genusspecies)%>%
+  group_by(HostPlant,Site,Year,PlantIndividual,OTU,GenusSpecies)%>%
   summarise(abundance=n())
 as.data.frame(dat2)
 data.frame(dat2$HostPlant,dat2$PlantIndividual,dat2$Year,dat2$OTU,dat2$abundance)
@@ -78,15 +80,15 @@ dat3<-dat2%>%
   ungroup()%>%
   unite(PlantIndividualYear,PlantIndividual,Year,remove=F)%>%
   unite(HostPlantSite,HostPlant,Site,remove=F)%>%
-  dplyr::select(-Genusspecies)%>%
+  dplyr::select(-GenusSpecies)%>%
   spread(OTU,abundance,fill=0)
-dat.comm<-data.frame(dat3[,7:66])
+dat.comm<-data.frame(dat3[,7:62])
 row.names(dat.comm)<-dat3$PlantIndividualYear
 
 
 ##### Phylogenetic tree #####
-#note - the uncleaned tree in this directory contains the genus species names attached to the OTU numbers
-tree<-read.newick("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/FiguresStats/FarrerTBAScleaned3/Farrertreecleaned.nwk")
+#note - the uncleaned tree in this directory contains the genus species names (query sequence) attached to the OTU numbers
+tree<-read.newick("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/FiguresStats/FarrerTBAScleaned5/Farrertreecleaned.nwk")
 
 plot(tree)
 
@@ -97,7 +99,7 @@ plot(tree)
 ##### Faith's Phylogenetic distance #####
 PD<-pd(dat.comm,tree)
 
-dat4<-data.frame(dat3[,1:6],PD,dat3[,7:66])
+dat4<-data.frame(dat3[,1:6],PD,dat3[,7:62])
 
 
 
@@ -109,14 +111,14 @@ ses.mpd.result.notweighted <- ses.mpd(dat.comm, phydist, null.model="taxa.labels
 ses.mpd.result.notweighted
 ses.mpd.result.notweighted$PlantIndividualYear<-rownames(ses.mpd.result.notweighted)
 ses.mpd.result.notweighted1<-ses.mpd.result.notweighted%>%
-  select(PlantIndividualYear,mpd.obs.z)%>%
+  dplyr::select(PlantIndividualYear,mpd.obs.z)%>%
   rename(mpd.obs.z.notweighted=mpd.obs.z)
 
 ses.mpd.result.weighted <- ses.mpd(dat.comm, phydist, null.model="taxa.labels",abundance.weighted=TRUE, runs=999) #takes 5 min with 999
 ses.mpd.result.weighted
 ses.mpd.result.weighted$PlantIndividualYear<-rownames(ses.mpd.result.weighted)
 ses.mpd.result.weighted1<-ses.mpd.result.weighted%>%
-  select(PlantIndividualYear,mpd.obs.z)%>%
+  dplyr::select(PlantIndividualYear,mpd.obs.z)%>%
   rename(mpd.obs.z.weighted=mpd.obs.z)
 
 dat5<-dat4%>%
@@ -125,18 +127,15 @@ dat5<-dat4%>%
   mutate(HostPlant=recode(HostPlant,"Spartina alterniflora"= "S. alterniflora","Spartina patens"="S. patens","Phragmites australis"="P. australis","Juncus roemerianus"="J. roemerianus","Sagittaria lancifolia"="S. lancifolia"))
   
   
-dat6<-data.frame(dat5[,1:8],dat5[,69:70],dat5[,9:68])
+dat6<-data.frame(dat5[,1:8],dat5[,65:66],dat5[,9:64])
 head(dat6)
-
-
-dplyr::mutate(Species=dplyr::recode(Species,"Phragmites australis (L)"="Phragmites australis"))
-
+dim(dat6)
 
 
 
 
 ##### phyloseq object ####
-otus<-dat6[,11:70]
+otus<-dat6[,11:66]
 otus2<-t(otus)
 sampleotus<-dat6[,c(1:10)]
 taxonomyotus<-as.matrix(data.frame(Kingdom=row.names(otus2),Phylum=row.names(otus2),Class=row.names(otus2),Order=row.names(otus2),Class=row.names(otus2),Family=row.names(otus2),Genus=row.names(otus2),Species=row.names(otus2)))
@@ -158,39 +157,41 @@ dat2 #long dataformat
 
 
 
-###### testing blasting to unite ######
+###### Blasting to unite ######
 #unite.ref <- "/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAMarsh/Survey/Stats/Gradient/QIIME2/sh_general_release_dynamic_s_04.02.2020.fasta" #
 
-unite.ref <- "/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAMarsh/Culturing/FiguresStats/LAmarshCulture/sh_general_release_dynamic_s_29.11.2022.fasta"
+unite.ref <- "/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAMarsh/Culturing/FiguresStats/LAmarshCulture2/sh_general_release_dynamic_s_04.04.2024.fasta" #sh_general_release_dynamic_s_29.11.2022.fasta
 
-#to look at all or random sequences, not just the 60 otu rep set. can get seuqences in report_placed_qrydata.csv
-test<-read.csv("test.csv",header=T)
-taxatest<-assignTaxonomy(test, unite.ref, multithread = TRUE, minBoot=50, tryRC = TRUE,outputBootstraps=T) #was minBoot=70
-taxatestonly<-taxatest$tax;rownames(taxatestonly)<-1:dim(taxatest$tax)[1]
-taxatestboot<-taxatest$boot;rownames(taxatestboot)<-1:dim(taxatest$tax)[1]
-taxatestonly
-taxatestboot
+#to look at all or random sequences, not just the 56 otu rep set. can get sequences in report_placed_qrydata.csv
 
-#I got this data from assignments_report_nodupsCERVNAZD.csv
-my60otus<-read.csv("otus60.csv",header=T);rownames(my60otus)<-my60otus$abundance
+#I got this data from assignments_report_nodupsWG5WGW7J.csv
+my56otus<-read.csv("otus56.csv",header=T);rownames(my56otus)<-my56otus$abundance
 
-taxa<-assignTaxonomy(my60otus, unite.ref, multithread = TRUE, minBoot=70, tryRC = TRUE,outputBootstraps=T) #was minBoot=70
+taxa<-assignTaxonomy(my56otus, unite.ref, multithread = TRUE, minBoot=70, tryRC = TRUE,outputBootstraps=T) #was minBoot=70
 taxaonly<-data.frame(taxa$tax);rownames(taxaonly)<-1:dim(taxa$tax)[1]
 taxaboot<-data.frame(taxa$boot);rownames(taxaboot)<-1:dim(taxa$tax)[1]
 taxaonly
 taxaboot
-rownames(taxaonly)<-rownames(my60otus)
-genusspecies<-data.frame(otu=rownames(my60otus),genusspecies=paste(gsub("^.*?__","",taxaonly[,"Genus"]),gsub("^.*?__","",taxaonly[,"Species"])),genusboot=taxaboot[,"Genus"],speciesboot=taxaboot[,"Species"])
+rownames(taxaonly)<-rownames(my56otus)
+genusspecies<-data.frame(otu=rownames(my56otus),genusspecies=paste(gsub("^.*?__","",taxaonly[,"Genus"]),gsub("^.*?__","",taxaonly[,"Species"])),genusboot=taxaboot[,"Genus"],speciesboot=taxaboot[,"Species"])
 
 sort(unique(genusspecies$genusspecies))
 sort(unique(taxaonly$Phylum))
+sort(unique(taxaonly$Order))
+sort(unique(taxaonly$Family))
+sort(unique(taxaonly$Genus))
+sort(unique(taxaonly$Species)) #there are two spartinae species, so this count is 29 so I need to add 1 so 30 species
 
 taxaonly%>%group_by(Phylum)%>%tally()
 
+phragspartina<-dat6%>%
+  filter(HostPlant%in%c('P. australis','S. patens'))
 
 
 
 ##### FunGuild #####
+
+#Note I did not redo this for the 97% clustering since the 99% clustering didn't work
 
 #The weird thing about FUNGuildR is that for some taxa, like when I have Fusarium equiseti it matches to Nectriaceae rather than Fusarium in the database. When I used the FUNGUILD in the terminal, it worked better and matched to the lowest taxonomic level. 
 
@@ -275,8 +276,6 @@ temp2<-data.frame(temp,plantpathogen,plantpathogenbroad,plantpathogenbroadprobab
 dat7<-dat6%>%
   full_join(temp2)
 
-phragspartina<-dat6%>%
-  filter(HostPlant%in%c('Phragmites australis','Spartina patens'))
 phragspartina<-dat7%>%
   filter(HostPlant%in%c('P. australis','S. patens'))
 
