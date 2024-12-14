@@ -106,8 +106,8 @@ ggplot(richnessmean,aes(x=Site,y=mean,color=Site,group=HostPlant))+
   #scale_color_manual(values = c("gray70","gray50", "gray30"))+
   facet_wrap(vars(HostPlant),strip.position = "bottom")
 
-#This is one I used for ms
-pdf("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/Manuscripts/richness2.pdf",width=6.6,height=3.5)
+#This is one I used for ms, but the final fig is below in the same pdf as MPD
+#pdf("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/Manuscripts/richness2.pdf",width=6.6,height=3.5)
 ggplot(richnessmean,aes(x=HostPlant,y=mean,color=HostPlant,group=HostPlant))+
   labs(x = "",y="Richness") +
   theme_classic()+
@@ -119,7 +119,7 @@ ggplot(richnessmean,aes(x=HostPlant,y=mean,color=HostPlant,group=HostPlant))+
   geom_point(size=2.75)+
   geom_errorbar(aes(ymax = mean+se, ymin=mean-se),width=.35,size=1) +
   facet_wrap(vars(Site),strip.position = "bottom")
-dev.off()
+#dev.off()
 
 #I based the color palette on https://www.datylon.com/blog/data-visualization-for-colorblind-readers
 #tubro 6 is pretty good
@@ -179,72 +179,6 @@ anova(m2,type="marginal")
 #m2a<-lme(SR~HostPlant*Site,random=~1|Year,weights=varIdent(form=~1|Site*HostPlant),data=phragspartina,na.action=na.omit)
 #anova(m2,m2a)
 #anova(m2,type="marginal")
-
-
-
-
-
-
-###### Faiths Phylogenetic distance #####
-pdmean<-dat6%>%
-  group_by(HostPlant,Site)%>%
-  summarise(mean=mean(PD),se=std.error(PD),count=n())
-
-#pdf("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Survey/Manuscripts/Gradientms/Figs/natrichhetvar.pdf",width=2.2,height=2.2)
-ggplot(pdmean,aes(x=Site,y=mean,color=HostPlant,group=HostPlant))+
-  labs(x = "",y="PD") +
-  theme_classic()+
-  theme(line=element_line(size=.3),text=element_text(size=10),strip.background = element_rect(colour="white", fill="white"),axis.line=element_line(color="gray30",size=.5),legend.position = "none",panel.spacing=unit(0,"cm"),strip.placement = "outside")+
-  geom_line(stat = "identity", position = "identity",size=.5,col="black")+
-  geom_point(size=1.8)+
-  geom_errorbar(aes(ymax = mean+se, ymin=mean-se),width=.25,size=.5) +
-  #scale_color_manual(values = c("gray70","gray50", "gray30"))+
-  facet_wrap(vars(HostPlant),strip.position = "bottom")
-#dev.off()
-
-ggplot(pdmean,aes(x=HostPlant,y=mean,color=Site,group=Site))+
-  labs(x = "",y="PD") +
-  theme_classic()+
-  theme(line=element_line(size=.3),text=element_text(size=10),strip.background = element_rect(colour="white", fill="white"),axis.line=element_line(color="gray30",size=.5),legend.position = "none",panel.spacing=unit(0,"cm"),strip.placement = "outside")+
-  geom_line(stat = "identity", position = "identity",size=.5,col="black")+
-  geom_point(size=1.8)+
-  geom_errorbar(aes(ymax = mean+se, ymin=mean-se),width=.25,size=.5) +
-  #scale_color_manual(values = c("gray70","gray50", "gray30"))+
-  facet_wrap(vars(Site),strip.position = "bottom")
-
-#Averaging within each Site
-pdmean<-dat4%>%
-  # ungroup()%>%
-  group_by(Site)%>%
-  summarise(mean=mean(PD),se=std.error(PD))
-
-ggplot(pdmean,aes(x=Site,y=mean,color=Site,group=Site))+
-  labs(x = "",y="PD") +
-  theme_classic()+
-  theme(line=element_line(size=.3),text=element_text(size=10),strip.background = element_rect(colour="white", fill="white"),axis.line=element_line(color="gray30",size=.5),legend.position = "none",panel.spacing=unit(0,"cm"),strip.placement = "outside")+
-  geom_line(stat = "identity", position = "identity",size=.5,col="black")+
-  geom_point(size=1.8)+
-  geom_errorbar(aes(ymax = mean+se, ymin=mean-se),width=.25,size=.5) 
-
-#Averaging within host plant
-pdmean<-dat4%>%
-  group_by(HostPlant)%>%
-  summarise(mean=mean(PD),se=std.error(PD))
-
-ggplot(pdmean,aes(x=HostPlant,y=mean,color=HostPlant,group=HostPlant))+
-  labs(x = "",y="PD") +
-  theme_classic()+
-  theme(line=element_line(size=.3),text=element_text(size=10),strip.background = element_rect(colour="white", fill="white"),axis.line=element_line(color="gray30",size=.5),legend.position = "none",panel.spacing=unit(0,"cm"),strip.placement = "outside")+
-  geom_line(stat = "identity", position = "identity",size=.5,col="black")+
-  geom_point(size=1.8)+
-  geom_errorbar(aes(ymax = mean+se, ymin=mean-se),width=.25,size=.5) 
-
-m1<-gls(PD~HostPlant+Site,data=dat6,na.action=na.omit)
-#m1<-gls(mpd.obs.z.weighted~Site,data=dat6,na.action=na.omit)
-anova(m1,type="marginal")
-
-m1<-gls(PD~HostPlant*Site,data=phragspartina,na.action=na.omit)
-anova(m1,type="marginal")
 
 
 
@@ -367,7 +301,7 @@ richfig<-ggplot(richnessmean,aes(x=HostPlant,y=mean,color=HostPlant,group=HostPl
   labs(x = "",y="Richness") +
   theme_classic()+
   theme(line=element_line(size=.3),text=element_text(size=12),strip.background = element_rect(colour="white", fill="white"),axis.line=element_line(color="gray30",size=.5),legend.position = "none",strip.placement = "outside",panel.spacing=unit(0,"cm"),axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),panel.background = element_rect(fill = NA, color = "gray50"))+
-  scale_color_manual(values = c("#EEBAB4", "#F05039","#3D65A5","#12285c","#7ca1cc"))+
+  scale_color_manual(values = c("#3D65A5", "#F05039","#EEBAB4","#7ca1cc","#12285c"))+#c("#EEBAB4", "#F05039","#3D65A5","#12285c","#7ca1cc")
   geom_point(size=2.75)+
   geom_errorbar(aes(ymax = mean+se, ymin=mean-se),width=.35,size=1) +
   facet_wrap(vars(Site),strip.position = "bottom")
@@ -376,7 +310,7 @@ mpdfig<-ggplot(mpdmean,aes(x=HostPlant,y=mean,color=HostPlant,group=HostPlant))+
   labs(x = "",y="MPD") +
   theme_classic()+
   theme(line=element_line(size=.3),text=element_text(size=12),strip.background = element_rect(colour="white", fill="white"),axis.line=element_line(color="gray30",size=.5),legend.position = "none",strip.placement = "outside",panel.spacing=unit(0,"cm"),axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),panel.background = element_rect(fill = NA, color = "gray50"))+
-  scale_color_manual(values = c("#EEBAB4", "#F05039","#3D65A5","#12285c","#7ca1cc"))+
+  scale_color_manual(values = c("#3D65A5", "#F05039","#EEBAB4","#7ca1cc","#12285c"))+
   geom_hline(yintercept=0,linetype="dashed")+
   geom_point(size=2.75)+
   geom_errorbar(aes(ymax = mean+se, ymin=mean-se),width=.35,size=1) +

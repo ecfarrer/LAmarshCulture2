@@ -114,8 +114,8 @@ plot1<-
   #scale_fill_manual(values = scales::viridis_pal(option = "turbo")(6))+
   #scale_color_manual(values = scales::viridis_pal(option = "viridis")(5))+
   #scale_fill_manual(values = scales::viridis_pal(option = "viridis")(5))+
-  scale_color_manual(values = c("#EEBAB4", "#F05039","#3D65A5","#12285c","#7ca1cc"))+
-  scale_fill_manual(values = c("#EEBAB4", "#F05039","#3D65A5","#12285c","#7ca1cc"))+
+  scale_color_manual(values = c("#3D65A5", "#F05039","#EEBAB4","#7ca1cc","#12285c"))+
+  scale_fill_manual(values = c("#3D65A5", "#F05039","#EEBAB4","#7ca1cc","#12285c"))+
   scale_shape_manual(values=c(5,3,16))+ 
   geom_point(aes(x=CAP1, y=CAP2,color=HostPlant,shape=Site),size = 2)+
   geom_polygon(data=hull1,aes(x=CAP1,y=CAP2, fill=HostPlant,colour = HostPlant),alpha=.2)
@@ -170,8 +170,8 @@ plot2<-ggplot(site_scores2)+
   theme_classic()+#  theme(legend.position = "none")
   xlab("CAP1 [7.6%]") +  # 
   ylab("CAP2 [1.7%]") +  # 
-  scale_color_manual(values = c("#EEBAB4", "#F05039","#3D65A5","#12285c","#7ca1cc"))+
-  scale_fill_manual(values = c("#EEBAB4", "#F05039","#3D65A5","#12285c","#7ca1cc"))+
+  scale_color_manual(values = c("#3D65A5", "#F05039","#EEBAB4","#7ca1cc","#12285c"))+
+  scale_fill_manual(values = c("#3D65A5", "#F05039","#EEBAB4","#7ca1cc","#12285c"))+
   scale_shape_manual(values=c(5,3,16))+ 
   geom_point(aes(x=CAP1, y=CAP2,color=HostPlant,shape=Site),size = 2)+
   geom_polygon(data=hull2,aes(x=CAP1,y=CAP2, fill=HostPlant,colour = HostPlant),alpha=.2)

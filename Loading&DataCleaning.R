@@ -189,6 +189,69 @@ phragspartina<-dat6%>%
 
 
 
+
+
+
+##### Reading in isolate data #####
+
+#I just added a "CultureID" column in the csv file by duplicating "Culture ID code". I didn't see any typos. nothing was changed.
+isolatefile2017<-read.csv("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/Claire_project_fungi.csv",stringsAsFactors = T)
+isolatefile2017b<-isolatefile2017%>%
+  dplyr::select(PlantIndividual,Species,Site)
+isolatefile2017b$Year<-2017
+head(isolatefile2017b)
+levels(isolatefile2017b$Species)
+levels(isolatefile2017b$Site)
+levels(isolatefile2017b$PlantIndividual)
+
+#for 2018 I cleaned up the "culture ID code" column in the .csv file as much as I could and called it cultureID. Some of the things I cleaned were Saglan changed to SagLan, JuneRoe changed to JunRoe. there maybe be some cultureIDs that may have been renamed between this voucher file and the master file, for example i'm not sure if we changed the name (added a -1 or -2) when we had the same name repeated in 2017 and 2018. I'm leaving it as is for now. i decided not touse this since it wasn't the smaples that were sent for sequecing, this includes weird pcr fails.
+#isolatefile2018<-read.csv("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/Vouchers_2018.csv",stringsAsFactors = T)
+#head(isolatefile2018)
+#isolatefile2018b<-isolatefile2018%>%
+#  dplyr::select(CultureID,Plant,Site)
+#isolatefile2018b$Year<-2018
+#colnames(isolatefile2018b)[2]<-"Species"
+#isolatefiletot<-rbind(isolatefile2017b,isolatefile2018b)
+
+head(culturefile2)
+
+isolatefile2018<-read.csv("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/isolates2018.csv",stringsAsFactors = T)
+head(isolatefile2018)
+levels(isolatefile2018$Species)
+levels(isolatefile2018$Site)
+levels(isolatefile2018$PlantIndividual)
+isolatefile2018b<-isolatefile2018%>%
+  dplyr::select(PlantIndividual, Species, Site, Year)
+
+isolatefiletot2<-rbind(isolatefile2017b,isolatefile2018b)
+dim(isolatefiletot2)
+isolatefiletot2$PlantIndividualYear<-paste(isolatefiletot2$PlantIndividual,isolatefiletot2$Year,sep="_")
+isolatefiletot2$Site<-factor(isolatefiletot2$Site,levels=c("Turtle cove","CERF","Lumcon"))
+
+#by individual
+mi<-isolatefiletot2%>%
+  group_by(PlantIndividualYear,Site,Species)%>%
+  summarise(isolates=n())
+mi
+mi2<-mi%>%
+  group_by(Site,Species)%>%
+  summarise(mean=mean(isolates),se=std.error(isolates),n=n())
+mi2
+
+#totals by site
+mi<-isolatefiletot2%>%
+  group_by(Site)%>%
+  summarise(isolates=n())
+mi
+
+
+#totals by species
+mi<-isolatefiletot2%>%
+  group_by(Species)%>%
+  summarise(isolates=n())
+mi
+
+
 ##### FunGuild #####
 
 #Note I did not redo this for the 97% clustering since the 99% clustering didn't work
