@@ -154,6 +154,10 @@ head(dat6) #big data frame, wide data format, dat3 plus PD and MPD data
 dat7 #dat6 plus funguild pathogens/symbiotrophs
 dat2 #long dataformat 
 
+#Exporing dat6 for EDI archiving
+#add sample ID so it can link to the MPD distance matrix
+dat6withids<-data.frame(sampleID=rownames(sample_data(datp)),dat6)
+write.csv(dat6withids,"/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/Manuscripts/Revision2/EDIdata/RichnessMDPAbund.csv",row.names = F)
 
 
 
@@ -187,8 +191,9 @@ taxaonly%>%group_by(Phylum)%>%tally()
 phragspartina<-dat6%>%
   filter(HostPlant%in%c('P. australis','S. patens'))
 
-
-
+#Exporting data for EDI archiving
+TaxaAndSeqs<-data.frame(OTU=rownames(taxaonly),taxaonly,sequence=rownames(taxa$tax))
+write.csv(TaxaAndSeqs,"/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/Manuscripts/Revision2/EDIdata/TaxaAndSeqs.csv",row.names = F)
 
 
 

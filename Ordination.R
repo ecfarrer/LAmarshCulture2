@@ -59,6 +59,12 @@ plot_ordination(datpyear, mynmdsyearj, type="samples", color="Year",axes=c(1,2))
 MPDdist<-comdist(data.frame(t(otu_table(datp))), cophenetic(phy_tree(datp)), abundance.weighted=F)
 MPDdistweighted<-comdist(data.frame(t(otu_table(datp))), cophenetic(phy_tree(datp)), abundance.weighted=T)
 
+#Exporting to EDI archive
+MPDdistweighted
+cbind(sample_data(datp)$PlantIndividualYear,dat6$PlantIndividualYear)
+identical(sample_data(datp)$PlantIndividualYear,dat6$PlantIndividualYear)
+write.csv(as.matrix(MPDdistweighted),"/Users/farrer/Dropbox/EmilyComputerBackup/Documents/LAmarsh/Culturing/Manuscripts/Revision2/EDIdata/MPDdistancematrix.csv",row.names = T)
+
 #unifracp<-unifrac(otus,tree) #doesnt work with subsetting b/c sample names are not the same
 unifracp<-unifrac(t(otu_table(datp)),tree)
 
