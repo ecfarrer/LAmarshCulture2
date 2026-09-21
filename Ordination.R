@@ -147,6 +147,13 @@ summary(m1)
 m1 <- ordinate(datp, "CAP",distance=MPDdistweighted,formula=as.formula(~Site+Condition(Year+HostPlant)))
 summary(m1)
 
+#by site (for SELU seminar, I used the export tool in Plots window)
+plot_ordination(datp, mynmdsALLm, type="samples", color="Site",shape="HostPlant",axes=c(1,2))+
+  theme_classic()+#  theme(legend.position = "none")
+  scale_shape_manual(values=c(16,3,15,17,5))+ 
+  geom_point(size = 2)+
+  stat_ellipse(geom = "polygon", type="t", alpha=0.2, aes(x=CAP1,y=CAP2,fill=Site),level=.95,inherit.aes = F)
+
 plot2<-plot_ordination(datp, mynmdsALLm, type="samples", color="HostPlant",shape="Site",axes=c(1,2))+
   theme_classic()+#  theme(legend.position = "none")
   scale_shape_manual(values=c(5,3,16,15,17))+ 
